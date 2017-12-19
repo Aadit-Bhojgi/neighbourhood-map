@@ -15,4 +15,4 @@
 * Download the Project Zip file by following command:
 `git clone https://github.com/Aadit-Bhojgi/neighbourhood-map.git neighbourhood-map`
 `cd neighbourhood-map/`
-* Open `neigbourhood map.html`
+* Open `neigbourhood-map.html`
