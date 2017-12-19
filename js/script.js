@@ -4,7 +4,6 @@ var map, largeInfowindow, viewModel, bounds;
 var markers = [];
 
 var ViewModel = function (){
-    
     var self = this;
     self.locations = ko.observableArray([
       {
@@ -82,7 +81,10 @@ var ViewModel = function (){
           list: true
       }
     ]);
-    self.select_me = ko.observable();
+    // Places that should be visible, based on user input.
+    self.filteredPlaces = ko.observableArray();
+    // Create empty variable, which will give us the user's search
+    self.query = ko.observable('');
 
     // The following group uses the location array to create an array of markers on initialize.
     for (var i = 0; i < self.locations().length; i++) {
@@ -111,20 +113,13 @@ var ViewModel = function (){
         bounds.extend(markers[i].position);
       }
       map.fitBounds(bounds);
-
-      self.send = function () {
-                    try{
-                    var input = document.getElementById('input').value;
-                    for (var i = 0; i < markers.length; i++){
-                      if(markers[i].name == input){
-                        self.populateInfoWindow(markers[i], largeInfowindow)
-                        }
-                      }
-                    }
-                    catch(err){
-                      window.alert('Please select Location you want to visit from the Dropdown button on the left side.');
-                    }
-                  }
+      self.send_list = function(loc) {
+      					for (var i = 0; i < markers.length; i++){
+		                      if(markers[i].name === loc.name){
+		                        self.populateInfoWindow(markers[i], largeInfowindow)
+		                        }
+		                     }
+      					}
 
       // This function populates the infowindow when the marker is clicked. We'll only allow
       // one infowindow which will open at the marker that is clicked, and populate based
@@ -136,30 +131,55 @@ var ViewModel = function (){
             infowindow.marker = marker;
             var Url = 'https://api.foursquare.com/v2/venues/' + marker.location + 
             '?client_id=SSZA3RP2Y4SPNF5BSCB3QGW1T0GJRX0ASEPGCE1G0XZOWCCJ&client_secret=TXVHUYTIFOJSUVEVOR3QO0BKSUUPQWF1CA12E5EU41UDQZGQ&v=20170818&m=foursquare';
-                
             $.getJSON(Url, function(data){
-
+              var add, like, rate;
               articles = data.response.venue;
-              var article = articles;
-              infowindow.setContent('<h5>'+ marker.name+'</h5><br><h6>'+articles.location.address+'</h6>'
-                +'Likes : '+articles.likes.count+'<br>'+'Rating : '+articles.rating);
+              add = articles.location.address || 'Address not available';
+              like = articles.likes.count || 'Likes not available';
+              rate = articles.rating || 'Ratings not available';
+              infowindow.setContent('<h5>'+ marker.name+'</h5><br><h6>'+add+'</h6>'
+                +'Likes : '+like+'<br>'+'Ratings : '+rate);
               }).fail(function(){
                 infowindow.setContent('<h6>Failed to get information of your Location.</h6>');
               });
-
               infowindow.open(map, marker);
               marker.setAnimation(google.maps.Animation.BOUNCE);
-              setTimeout(function () { marker.setAnimation(null); }, 2000);
+              setTimeout(function () { marker.setAnimation(null); }, 1400);
                 // Make sure the marker property is cleared if the infowindow is closed.
                 infowindow.addListener('closeclick', function() {
                   infowindow.marker = null;
                 });
               }
         }
+
+    // put them in the visible list
+    self.locations().forEach(function (place) {
+        self.filteredPlaces.push(place);
+    });
+
+    // Function to filter
+    self.filter = function () {
+        // First we remove everything from the visible list
+        self.filteredPlaces.removeAll();
+        // For each of the items in our locations array... 
+      	markers.forEach(function (place) {
+            // First we remove the marker
+            place.setVisible(false);
+            // Then we compare the name of the place in the array, with the name in our search
+            if (place['name'].toLowerCase().indexOf(self.query().toLowerCase()) >= 0) {
+				// If its the same, we push the place in the visible array (which we cleared)
+                self.filteredPlaces.push(place);
+            }
+        });
+        // Now we have the list of all the visible places, based on our query search
+        self.filteredPlaces().forEach(function (place) {
+            // And we put the markers visible for these places
+            place.setVisible(true);
+        });
+    }
 };
 
 function initMap(){
-
     // Constructor creates a new map - only center and zoom are required.
     map = new google.maps.Map(document.getElementById('map'), {
       center: {lat: 30.7306308, lng: 76.7781669},
