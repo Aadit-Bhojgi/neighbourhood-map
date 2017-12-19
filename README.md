@@ -12,7 +12,7 @@
 * Foursquare API
 
 #### How to run
-* Download the Project Zip file by following command:
-`git clone https://github.com/Aadit-Bhojgi/neighbourhood-map.git neighbourhood-map`
+* Download the Project Zip file by following command:<br>
+`git clone https://github.com/Aadit-Bhojgi/neighbourhood-map.git neighbourhood-map`<br>
 `cd neighbourhood-map/`
 * Open `neigbourhood-map.html`
